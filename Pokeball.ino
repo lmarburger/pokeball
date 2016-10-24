@@ -7,11 +7,8 @@ const int redLed = 0;
 const int greenLed = 1;
 const int blueLed = 4;
 const int buttonLed = 3;
-const int buttonPin = 2;
 
 bool randSeeded = false;
-unsigned long lastDebounceTime = 0;
-unsigned long debounceDelay = 50;
 
 void setup() {
   //to minimize power consumption while sleeping, output pins must not source
@@ -33,7 +30,7 @@ void setup() {
  }
 
 void loop() {
-  goToSleep();
+  hibernate();
   capture();
 }
 
@@ -74,7 +71,7 @@ void flash(int red, int green, int blue, int delayMs) {
   digitalWrite(buttonLed, LOW);
 }
 
-void goToSleep(void) {
+void hibernate(void) {
   byte adcsra, mcucr1, mcucr2;
   
   set_sleep_mode(SLEEP_MODE_PWR_DOWN);
@@ -95,6 +92,7 @@ void goToSleep(void) {
   MCUCR = mcucr2;
   
   sei();                                    //ensure interrupts enabled so we can wake up again
+
   sleep_cpu();                              //go to sleep
   sleep_disable();                          //wake up here
   
@@ -103,19 +101,5 @@ void goToSleep(void) {
 
 //external interrupt 0 wakes the MCU
 ISR(INT0_vect) {
-  GIMSK = 0;                     //disable external interrupts (only need one to wake up)
-}
-
-void old() {
-  if (digitalRead(buttonPin) == HIGH) {
-    if (lastDebounceTime == 0) {
-      lastDebounceTime = millis();
-    } else if ((millis() - lastDebounceTime) > debounceDelay) {
-      capture();
-      delay(500);
-      lastDebounceTime = 0;
-    }
-  } else {
-    lastDebounceTime = 0;
-  }
+  GIMSK = 0;  //disable external interrupts (only need one to wake up)
 }
